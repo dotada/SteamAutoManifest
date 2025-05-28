@@ -1,6 +1,9 @@
 ﻿using Gameloop.Vdf;
 using Gameloop.Vdf.Linq;
-
+using System.Diagnostics.CodeAnalysis;
+[DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(System.IO.File))]
+[DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Gameloop.Vdf.VdfSerializer))]
+[DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Gameloop.Vdf.VdfConvert))]
 static int GetCharacterOccurancesInString(string str, char c)
 {
     int count = 0;
@@ -93,6 +96,14 @@ if (!String.IsNullOrWhiteSpace(dlcinput) && int.Parse(dlcinput) > 0)
     }
 }
 
+foreach (KeyValuePair<string, string> key in keys)
+{
+    if (!appIds.Contains(key.Key))
+    {
+        appIds.Add(key.Key);
+    }
+}
+
 for (int i = 0; i < appIds.Count; i++)
 {
     using (StreamWriter sw = File.AppendText(Path.Combine(applistpath, applistcount.ToString() + ".txt")))
@@ -103,21 +114,32 @@ for (int i = 0; i < appIds.Count; i++)
     }
 }
 
-dynamic config = VdfConvert.Deserialize(File.ReadAllText(Path.Combine(steampath, "config", "config.vdf")), new VdfSerializerSettings() { MaximumTokenSize = 65536, UsesEscapeSequences = true});
-if (config.Value.Software.valve.Steam.depots == null)
+try
 {
-    config.Value.Software.valve.Steam.depots = new VObject();
-}
-VToken depots = config.Value.Software.valve.Steam.depots;
-VObject depotsobject = depots as VObject;
-foreach (KeyValuePair<string, string> key in keys)
-{
-    VObject newdepot = new VObject
+    dynamic config = VdfConvert.Deserialize(File.ReadAllText(Path.Combine(steampath, "config", "config.vdf")), new VdfSerializerSettings() { MaximumTokenSize = 32768, UsesEscapeSequences = true });
+    VObject root = config.Value;
+    VObject software = root["Software"] as VObject;
+    VObject valve = (software.ContainsKey("valve") ? software["valve"] : software["Valve"]) as VObject;
+    VObject steam = valve["Steam"] as VObject;
+    if (!steam.ContainsKey("depots"))
     {
-        ["DecryptionKey"] = new VValue(key.Value)
-    };
-    depotsobject[key.Key] = newdepot;
+        steam["depots"] = new VObject();
+    }
+    VObject depots = steam["depots"] as VObject;
+    foreach (KeyValuePair<string, string> key in keys)
+    {
+        depots[key.Key] = new VObject
+        {
+            ["DecryptionKey"] = new VValue(key.Value)
+        };
+    }
+    File.WriteAllText(Path.Combine(steampath, "config", "config.vdf"), VdfConvert.Serialize(config));
+    Console.WriteLine("Finished. Press any key to exit...");
+    Console.ReadLine();
+} catch (Exception ex)
+{
+    Console.WriteLine("An error occurred while processing the config.vdf file: " + ex.Message);
+    Console.WriteLine("Please ensure that the file exists and is not corrupted.");
+    Console.WriteLine("Press any key to exit...");
+    Console.ReadLine();
 }
-File.WriteAllText(Path.Combine(steampath, "config", "config.vdf"), config.ToString());
-Console.WriteLine("Press any key to exit...");
-Console.ReadLine();
