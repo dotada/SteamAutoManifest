@@ -1,4 +1,7 @@
-﻿static int GetCharacterOccurancesInString(string str, char c)
+﻿using Gameloop.Vdf;
+using Gameloop.Vdf.Linq;
+
+static int GetCharacterOccurancesInString(string str, char c)
 {
     int count = 0;
     foreach (char ch in str)
@@ -100,21 +103,21 @@ for (int i = 0; i < appIds.Count; i++)
     }
 }
 
-Console.WriteLine("If the depots section in your config.vdf does not exist please add it under the \"Rate\" section.");
-Console.WriteLine("Please copy paste the following into your config.vdf depots section: ");
+dynamic config = VdfConvert.Deserialize(File.ReadAllText(Path.Combine(steampath, "config", "config.vdf")), new VdfSerializerSettings() { MaximumTokenSize = 65536, UsesEscapeSequences = true});
+if (config.Value.Software.valve.Steam.depots == null)
+{
+    config.Value.Software.valve.Steam.depots = new VObject();
+}
+VToken depots = config.Value.Software.valve.Steam.depots;
+VObject depotsobject = depots as VObject;
 foreach (KeyValuePair<string, string> key in keys)
 {
-    using (StreamWriter sw = File.AppendText(Path.Combine(applistpath, applistcount.ToString() + ".txt")))
+    VObject newdepot = new VObject
     {
-        sw.Write(key.Key);
-        sw.Close();
-        applistcount++;
-    }
-    Console.Write($"                    \"{key.Key}\"\n");
-    Console.Write("                    {\n");
-    Console.Write($"                        \"DecryptionKey\"   \"{key.Value}\"\n");
-    Console.Write("                    }\n");
+        ["DecryptionKey"] = new VValue(key.Value)
+    };
+    depotsobject[key.Key] = newdepot;
 }
-
+File.WriteAllText(Path.Combine(steampath, "config", "config.vdf"), config.ToString());
 Console.WriteLine("Press any key to exit...");
 Console.ReadLine();
