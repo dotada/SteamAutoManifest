@@ -51,6 +51,7 @@ jobs:
     strategy:
       matrix:
         configuration: [Debug, Release]
+        readytorun: [true, false]
 
     runs-on: windows-latest  # For a list of available runner types, refer to
                              # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
@@ -67,21 +68,40 @@ jobs:
       with:
         dotnet-version: 8.0.x
 
-    - name: Publish .NET Desktop App
+    - name: Publish RTR App
+      if: matrix.readytorun == 'true' 
       run: dotnet publish SteamAutoManifest.csproj 
-             --configuration Release 
+             --configuration ${{ matrix.configuration }} 
              -f net8.0 
              -r win-x64 
              --self-contained true 
              -p:PublishSingleFile=true 
              -p:PublishTrimmed=true 
-             -p:PublishReadyToRun=false 
+             -p:PublishReadyToRun=${{ matrix.readytorun}} 
+             --output publish_output/${{ matrix.configuration }}_RTR/
+
+    - name: Publish noRTR App
+      if: matrix.readytorun == 'false' 
+      run: dotnet publish SteamAutoManifest.csproj 
+             --configuration ${{ matrix.configuration }} 
+             -f net8.0 
+             -r win-x64 
+             --self-contained true 
+             -p:PublishSingleFile=true 
+             -p:PublishTrimmed=true 
+             -p:PublishReadyToRun=${{ matrix.readytorun}} 
              --output publish_output/${{ matrix.configuration }}/
 
-    - name: Upload Published App
+    - name: Upload noRTR App
+      if: matrix.readytorun == 'false'
       uses: actions/upload-artifact@v4
       with:
-        name: published-app-${{ matrix.configuration }}
+        name: SteamAutoManifest-${{ matrix.configuration }}
         path: publish_output/${{ matrix.configuration }}/
 
-     
+    - name: Upload RTR App
+      if: matrix.readytorun == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: SteamAutoManifest-${{ matrix.configuration }}-RTR
+        path: publish_output/${{ matrix.configuration }}_RTR/     
