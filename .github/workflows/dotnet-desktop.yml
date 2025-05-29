@@ -52,8 +52,9 @@ jobs:
       matrix:
         configuration: [Debug, Release]
         readytorun: [rtr, nortr]
+        os: [ubuntu-latest, windows-latest]
 
-    runs-on: windows-latest  # For a list of available runner types, refer to
+    runs-on: ${{ matrix.os }} # For a list of available runner types, refer to
                              # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
 
     steps:
@@ -61,6 +62,20 @@ jobs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
+
+    - name: Set Runtime Identifier
+      id: set-runtime
+      run: |
+        if [[ "${{ runner.os }}" == "Windows" ]]; then
+          echo "DOTNET_RUNTIME=win-x64" >> $GITHUB_ENV
+        elif [[ "${{ runner.os }}" == "Linux" ]]; then
+          echo "DOTNET_RUNTIME=linux-x64" >> $GITHUB_ENV
+        else
+          echo "Unsupported OS: ${{ runner.os }}"
+          exit 1
+        fi
+      shell: bash
+
 
     # Install the .NET Core workload
     - name: Install .NET Core
@@ -73,7 +88,7 @@ jobs:
       run: dotnet publish SteamAutoManifest.csproj 
              --configuration ${{ matrix.configuration }} 
              -f net8.0 
-             -r win-x64 
+             -r ${{ env.DOTNET_RUNTIME }} 
              --self-contained true 
              -p:PublishSingleFile=true 
              -p:PublishTrimmed=true 
@@ -85,7 +100,7 @@ jobs:
       run: dotnet publish SteamAutoManifest.csproj 
              --configuration ${{ matrix.configuration }} 
              -f net8.0 
-             -r win-x64 
+             -r ${{ env.DOTNET_RUNTIME }} 
              --self-contained true 
              -p:PublishSingleFile=true 
              -p:PublishTrimmed=true 
@@ -96,12 +111,12 @@ jobs:
       if: matrix.readytorun == 'nortr'
       uses: actions/upload-artifact@v4
       with:
-        name: SteamAutoManifest-${{ matrix.configuration }}
+        name: SteamAutoManifest-${{ matrix.configuration }}-${{ env.DOTNET_RUNTIME }}  
         path: publish_output/${{ matrix.configuration }}/
 
     - name: Upload RTR App
       if: matrix.readytorun == 'rtr'
       uses: actions/upload-artifact@v4
       with:
-        name: SteamAutoManifest-${{ matrix.configuration }}-RTR
+        name: SteamAutoManifest-${{ matrix.configuration }}-RTR-${{ env.DOTNET_RUNTIME }} 
         path: publish_output/${{ matrix.configuration }}_RTR/     
