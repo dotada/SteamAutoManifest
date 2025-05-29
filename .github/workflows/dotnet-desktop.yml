@@ -51,7 +51,7 @@ jobs:
     strategy:
       matrix:
         configuration: [Debug, Release]
-        readytorun: [true, false]
+        readytorun: [rtr, nortr]
 
     runs-on: windows-latest  # For a list of available runner types, refer to
                              # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
@@ -69,7 +69,7 @@ jobs:
         dotnet-version: 8.0.x
 
     - name: Publish RTR App
-      if: matrix.readytorun == true
+      if: matrix.readytorun == 'rtr'
       run: dotnet publish SteamAutoManifest.csproj 
              --configuration ${{ matrix.configuration }} 
              -f net8.0 
@@ -77,11 +77,11 @@ jobs:
              --self-contained true 
              -p:PublishSingleFile=true 
              -p:PublishTrimmed=true 
-             -p:PublishReadyToRun=${{ matrix.readytorun}} 
+             -p:PublishReadyToRun=true
              --output publish_output/${{ matrix.configuration }}_RTR/
 
     - name: Publish noRTR App
-      if: matrix.readytorun == false
+      if: matrix.readytorun == 'nortr'
       run: dotnet publish SteamAutoManifest.csproj 
              --configuration ${{ matrix.configuration }} 
              -f net8.0 
@@ -89,18 +89,18 @@ jobs:
              --self-contained true 
              -p:PublishSingleFile=true 
              -p:PublishTrimmed=true 
-             -p:PublishReadyToRun=${{ matrix.readytorun}} 
+             -p:PublishReadyToRun=false
              --output publish_output/${{ matrix.configuration }}/
 
     - name: Upload noRTR App
-      if: matrix.readytorun == false
+      if: matrix.readytorun == 'nortr'
       uses: actions/upload-artifact@v4
       with:
         name: SteamAutoManifest-${{ matrix.configuration }}
         path: publish_output/${{ matrix.configuration }}/
 
     - name: Upload RTR App
-      if: matrix.readytorun == true
+      if: matrix.readytorun == 'rtr'
       uses: actions/upload-artifact@v4
       with:
         name: SteamAutoManifest-${{ matrix.configuration }}-RTR
