@@ -76,12 +76,12 @@ jobs:
              -p:PublishSingleFile=true 
              -p:PublishTrimmed=true 
              -p:PublishReadyToRun=false 
-             --output publish_output
+             --output publish_output/${{ matrix.configuration }}/
 
     - name: Upload Published App
       uses: actions/upload-artifact@v4
       with:
-        name: published-app
-        path: publish_output/
+        name: published-app-${{ matrix.configuration }}
+        path: publish_output/${{ matrix.configuration }}/
 
      
