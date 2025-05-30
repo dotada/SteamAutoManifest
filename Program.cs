@@ -104,13 +104,23 @@ foreach (KeyValuePair<string, string> key in keys)
     }
 }
 
+List<string> existingAppIds = new();
+
+foreach (string file in Directory.GetFiles(applistpath))
+{
+    existingAppIds.Add(File.ReadAllLines(file).First().Trim());
+}
+
 for (int i = 0; i < appIds.Count; i++)
 {
-    using (StreamWriter sw = File.AppendText(Path.Combine(applistpath, applistcount.ToString() + ".txt")))
+    if (!existingAppIds.Contains(appIds[i]))
     {
-        sw.Write(appIds[i].Replace("\n", "").Trim());
-        sw.Close();
-        applistcount++;
+        using (StreamWriter sw = File.AppendText(Path.Combine(applistpath, applistcount.ToString() + ".txt")))
+        {
+            sw.Write(appIds[i].Replace("\n", "").Trim());
+            sw.Close();
+            applistcount++;
+        }
     }
 }
 
