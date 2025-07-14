@@ -72,29 +72,6 @@ writer.Write(appid);
 writer.Close();
 applistcount++;
 List<string> appIds = new();
-
-/*
-Console.Write("Enter amount of DLCs to enter, if any: ");
-string dlcinput = Console.ReadLine();
-if (!String.IsNullOrWhiteSpace(dlcinput) && int.Parse(dlcinput) > 0)
-{
-    for (int i = 0; i < int.Parse(dlcinput); i++)
-    {
-        Console.Write("Enter DLC AppID: ");
-        string dlcAppId = Console.ReadLine().Replace("\n", "").Trim();
-        if (String.IsNullOrWhiteSpace(dlcAppId)) break;
-        if (!appIds.Contains(dlcAppId))
-        {
-            appIds.Add(dlcAppId);
-        }
-        else
-        {
-            Console.WriteLine("DLC AppID already exists, please enter a unique AppID.");
-            i--;
-        }
-    }
-}
-*/
 foreach (KeyValuePair<string, string> key in keys)
 {
     appIds.Add(key.Key);
