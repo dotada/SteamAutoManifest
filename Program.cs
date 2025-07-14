@@ -1,22 +1,18 @@
 ﻿using Gameloop.Vdf;
 using Gameloop.Vdf.Linq;
 using System.Diagnostics.CodeAnalysis;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(System.IO.File))]
 [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Gameloop.Vdf.VdfSerializer))]
 [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Gameloop.Vdf.VdfConvert))]
 static int GetCharacterOccurancesInString(string str, char c)
 {
     int count = 0;
-    foreach (char ch in str)
-    {
-        if (ch == c)
-        {
-            count++;
-        }
-    }
+    foreach (char ch in str) if (ch == c) count++;
+
     return count;
 }
-
 Console.Write("Enter Steam path (where steam.exe is located): ");
 string steampath = Console.ReadLine();
 if (steampath[0].ToString() == "\"")
@@ -59,6 +55,9 @@ foreach (string file in manifestfiles)
 
 Dictionary<string, string> keys = new();
 IEnumerable<string> lines = File.ReadLines(luafiles[0]);
+string appid = lines.First().Split('(', ')')[1];
+JObject DLCInfo = JObject.Parse(await new HttpClient().GetStringAsync($"https://store.steampowered.com/api/appdetails?appids={appid}"));
+List<string> DLCs = DLCInfo[$"{appid}"]["data"]["dlc"].Values<string>().ToList();
 foreach (string line in lines)
 {
     if (line.Contains("addappid") && GetCharacterOccurancesInString(line, ',') >= 2)
@@ -68,15 +67,15 @@ foreach (string line in lines)
     }
 }
 
-string appid = lines.First().Split('(', ')')[1];
 StreamWriter writer = File.AppendText(Path.Combine(applistpath, applistcount.ToString() + ".txt"));
 writer.Write(appid);
 writer.Close();
 applistcount++;
+List<string> appIds = new();
 
+/*
 Console.Write("Enter amount of DLCs to enter, if any: ");
 string dlcinput = Console.ReadLine();
-List<string> appIds = new();
 if (!String.IsNullOrWhiteSpace(dlcinput) && int.Parse(dlcinput) > 0)
 {
     for (int i = 0; i < int.Parse(dlcinput); i++)
@@ -95,15 +94,18 @@ if (!String.IsNullOrWhiteSpace(dlcinput) && int.Parse(dlcinput) > 0)
         }
     }
 }
-
+*/
 foreach (KeyValuePair<string, string> key in keys)
 {
-    if (!appIds.Contains(key.Key))
+    appIds.Add(key.Key);
+}
+foreach (string dlc in DLCs)
+{
+    if (!appIds.Contains(dlc))
     {
-        appIds.Add(key.Key);
+        appIds.Add(dlc);
     }
 }
-
 List<string> existingAppIds = new();
 
 foreach (string file in Directory.GetFiles(applistpath))
