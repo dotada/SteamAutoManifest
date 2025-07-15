@@ -57,7 +57,11 @@ Dictionary<string, string> keys = new();
 IEnumerable<string> lines = File.ReadLines(luafiles[0]);
 string appid = lines.First().Split('(', ')')[1];
 JObject DLCInfo = JObject.Parse(await new HttpClient().GetStringAsync($"https://store.steampowered.com/api/appdetails?appids={appid}"));
-List<string> DLCs = DLCInfo[$"{appid}"]["data"]["dlc"].Values<string>().ToList();
+List<string> DLCs = new List<string>();
+if (DLCInfo[$"{appid}"]["data"]["dlc"] != null)
+{
+    DLCs = DLCInfo[$"{appid}"]["data"]["dlc"].Values<string>().ToList();
+}
 foreach (string line in lines)
 {
     if (line.Contains("addappid") && GetCharacterOccurancesInString(line, ',') >= 2)
