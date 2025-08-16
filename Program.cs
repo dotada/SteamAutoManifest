@@ -2,10 +2,10 @@
 using Gameloop.Vdf.Linq;
 using System.Diagnostics.CodeAnalysis;
 using Newtonsoft.Json.Linq;
-using System.Security.Principal;
-using System.Runtime.InteropServices;
-#if Windows 
+#if WINDOWS
     using Microsoft.Win32;
+    using System.Security.Principal;
+    using System.Runtime.InteropServices;
 #endif
 
 namespace SteamAutoManifest
@@ -18,7 +18,7 @@ namespace SteamAutoManifest
         static async Task Main(string[] args)
         {
             string steampath;
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            /*if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 Console.Write("Enter Steam path (where steam.exe is located): ");
                 steampath = Console.ReadLine();
@@ -50,7 +50,37 @@ namespace SteamAutoManifest
                 Console.WriteLine("Press enter to exit...");
                 Console.ReadLine();
                 return;
-            }
+            }*/
+
+            #if WINDOWS
+                if (!new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator))
+                {
+                    Console.WriteLine("Please run the program as administrator!");
+                    Console.WriteLine("Press enter to exit...");
+                    Console.ReadLine();
+                    return;
+                }
+                RegistryKey steampathkey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Wow6432Node\Valve\Steam");
+                steampath = steampathkey.GetValue("InstallPath")?.ToString() ?? string.Empty;
+                if (string.IsNullOrEmpty(steampath))
+                {
+                    Console.WriteLine("Steam path not found in registry. Please enter it manually.");
+                    Console.Write("Enter Steam path (where steam.exe is located): ");
+                    steampath = Console.ReadLine();
+                } else
+                {
+                    Console.WriteLine(steampath);
+                }
+            #elif LINUX
+                Console.Write("Enter Steam path (where steam executable is located): ");
+                steampath = Console.ReadLine();
+            #else
+                Console.WriteLine("This program is only supported on Windows and Linux.");
+                Console.WriteLine("Press enter to exit...");
+                Console.ReadLine();
+                return;
+            #endif
+
             static int GetCharacterOccurancesInString(string str, char c)
             {
                 int count = 0;
