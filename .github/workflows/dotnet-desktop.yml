@@ -52,7 +52,7 @@ jobs:
       matrix:
         configuration: [Debug, Release]
         readytorun: [rtr, nortr]
-        os: [ubuntu-latest, windows-latest]
+        os: [windows-latest]
 
     runs-on: ${{ matrix.os }} # For a list of available runner types, refer to
                              # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
@@ -66,14 +66,7 @@ jobs:
     - name: Set Runtime Identifier
       id: set-runtime
       run: |
-        if [[ "${{ runner.os }}" == "Windows" ]]; then
-          echo "DOTNET_RUNTIME=win-x64" >> $GITHUB_ENV
-        elif [[ "${{ runner.os }}" == "Linux" ]]; then
-          echo "DOTNET_RUNTIME=linux-x64" >> $GITHUB_ENV
-        else
-          echo "Unsupported OS: ${{ runner.os }}"
-          exit 1
-        fi
+        echo "DOTNET_RUNTIME=win-x64" >> $GITHUB_ENV
       shell: bash
 
 
