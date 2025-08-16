@@ -15,7 +15,7 @@ namespace SteamAutoManifest
         [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(File))]
         [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(VdfSerializer))]
         [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(VdfConvert))]
-        static async void Main()
+        static async Task Main(string[] args)
         {
             string steampath;
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
